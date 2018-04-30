@@ -75,3 +75,69 @@ If you're interested in learning about Android and Firebase, consider taking Uda
 ![](lesson_4_8_firebase_projects.png "Firebase Projects")
 ![](lesson_4_8_firebase_squawker.png "Squawker app")
 
+## Connect Firebase and the SquawkerApp
+
+### The Automated Way
+
+There are two ways to complete this exercise. I suggest the "manual way" (which is described below) so that you clearly know what you are changing. That said, if you have **Android Studio version 2.2 or above** and would like to do a more automated process, you can follow the [instructions here](https://firebase.google.com/docs/android/setup#use_the_firebase_assistant). Note that if you follow the automated directions, you **only** need to do the first two steps: "Connect your app to Firebase" and "Add FCM to your app". You should **not** do step 3, which is "Access the Device Registration token".
+
+![](firebaseconnectsteps.png "Steps to connect to Firebase")
+
+### The Manual Way (Recommended)
+
+Otherwise, let's manually configure Firebase! Creating a new project is very easy, so let's do that first.
+
+### Create a new Firebase Project
+
+**Step 1** Go to the Firebase Console and click on **Create a new Project**.
+
+![](firebasewelcom.png "Firebase Google account") 
+
+**Step 2** Name your project **Squawker**
+
+![](createsquawker.png "Firebase New Project Squawker")
+
+And that's it! You've created a Firebase project for Squawker. Now it's time to create a Firebase "app" for that project and attach it to your Squakwer app.
+
+### Connect the Squawker Android App to the Server
+
+**Step 1** Select **Add Firebase** to your **Android App**
+
+![](selectandroidapp.png "Add Firebase to your Android app")
+
+**Step 2** Enter the Squawker package into the dialog. It is `android.example.com.squawker`. You don't need a SHA key because we are not using Firebase features which require it. You also do not need the app nickname, though feel free to add one if you'd like.
+
+![](enterpackage.png "Enter Package")
+
+**Step 3** Follow the instructions to download the `google-service.json` config file and save it in Squawker's **app** directory. This configuration file is what tells Squawker what Firebase server instance to connect to online. It is specific to the Firebase "app" you just created. If you ever accidentally delete the `google-service.json `file, you can redownload it, by going to the app **Settings**.
+
+![](movegooglejson.png "Move the google json file")
+
+**Step 4** Now you'll add the Firebase SDK. Follow the instructions to add the correct gradle dependencies. The instructions will appear in a dialog, they can also be found [here](https://firebase.google.com/docs/android/setup#manually_add_firebase).
+
+**Step 5** You need to also add the SDK specifically for FCM. In your `app/build.gradle` file, add the following library:
+
+```com.google.firebase:firebase-messaging:10.2.0```
+
+## Send your First FCM Message
+[Firebase Console](https://console.firebase.google.com/).
+
+![](lesson_4_10_fcm_diagram.png "FCM Diagram")
+
+![](lesson_4_10_notifications.png "FCM Notifications")
+
+![](lesson_4_10_menu_console.png "Console")
+
+![](lesson_4_10_send_message.png "Send a message from the console")
+
+If the app is in the **background** (only):
+![](lesson_4_10_message_notification.png "Message Notification")
+
+If You're Having Trouble
+
+If you properly sent the message, you should see a notification on your phone. If not, check that Squawker is in the background, and that you're reliably connected to the internet. Also make sure that you included the FCM library in the last exercise.
+
+## Introduction to Message Data
+
+
+
