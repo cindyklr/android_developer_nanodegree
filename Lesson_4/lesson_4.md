@@ -139,5 +139,44 @@ If you properly sent the message, you should see a notification on your phone. I
 
 ## Introduction to Message Data
 
+![](lesson_4_11_fcm_diagram.png "FCM Diagram")
+
+![](lesson_4_11_notifications.png "Notifications")
+
+![](lesson_4_11_extra.png "Pass extra with message ")
+
+In MainActivity:
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+
+    // Gets the extra data from the intent that started the activity. For *notification*
+    // messages, this will contain key value pairs stored in the *data* section of the message.
+    Bundle extras = getIntent().getExtras();
+    // Checks if the extras exist and if the key "test" from our FCM message is in the intent
+    if (extras != null && extras.containsKey("test")) {
+        // If the key is there, print out the value of "test"
+        Log.d(LOG_TAG, "Contains: " + extras.getString("test"));
+    }
+
+}
+```
+
+![](lesson_4_11_console_extra.png "Write extra with the console")
+
+![](lesson_4_11_test.png "Send a message test with extra")
+
+![](lesson_4_11_log.png "Check the Logs")
+
+## Sending to a Specific Phone
+
+You can use the steps and example code mentioned in the video and linked [here](https://firebase.google.com/docs/cloud-messaging/android/client#manifest) to help.
+
+In the console, select Target > **Single Device**
+
+![](token.png "Token")
+
+
 
 
