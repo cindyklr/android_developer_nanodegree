@@ -46,7 +46,7 @@ If you are not signed in to a Google account, You will be prompted to sign in or
 
 ![](firebasewelcom.png "Firebase Google account") 
 
-You'll be creating a new Firebase Project soon, but do not press that button yet! Instead, watch the next video to learn more.
+You'll be creating a new Firebase Project soon, but do not press that button yet!
 
 ### Android and Firebase
 
@@ -118,6 +118,8 @@ And that's it! You've created a Firebase project for Squawker. Now it's time to 
 **Step 5** You need to also add the SDK specifically for FCM. In your `app/build.gradle` file, add the following library:
 
 ```com.google.firebase:firebase-messaging:10.2.0```
+
+https://stackoverflow.com/questions/46537373/unresolved-package-generated-in-androidmanifest-xml/47384765#47384765
 
 ## Send your First FCM Message
 [Firebase Console](https://console.firebase.google.com/).
