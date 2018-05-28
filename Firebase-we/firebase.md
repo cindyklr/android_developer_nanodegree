@@ -441,4 +441,291 @@ implementation 'com.firebaseui:firebase-ui-auth:4.0.0'
 
 ### AuthStateListener and AuthUI
 
+In MainActivity:
+```java
+private FirebaseAuth mFirebaseAuth;
+private FirebaseAuth.AuthStateListener mAuthStateListener;
+
+protected void onCreate(Bundle savedInstanceState){
+    ...
+    // Initialize Firebase components
+    mFirebaseDatabase = FirebaseDatabase.getInstance();
+    mFirebaseAuth = FirebaseAuth.getInstance();
+
+    mMessagesDatabaseReference.addChildEventListener(mChildEventListener);
+
+    mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+        @Override
+        public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in
+                Toast.makeText(MainActivity.this, "You're now signed in. Welcome to FriendlyChat.", Toast.LENGTH_SHORT).show();
+            } else {
+                List<AuthUI.IdpConfig> providers = Arrays.asList(
+                        new AuthUI.IdpConfig.EmailBuilder().build(),
+                        new AuthUI.IdpConfig.GoogleBuilder().build()
+                    );
+                // User is signed out
+                startActivityForResult(
+                        AuthUI.getInstance()
+                                .createSignInIntentBuilder()
+                                .setIsSmartLockEnabled(false)
+                                .setAvailableProviders(providers)  .build(),
+                        RC_SIGN_IN);
+            }
+        }
+    };
+}
+
+@Override
+protected void onResume() {
+    super.onResume();
+    mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+}
+
+@Override
+protected void onPause() {
+    super.onPause();
+    if (mAuthStateListener != null) {
+        mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+    }
+}
+```
+
+### Signing In FriendlyChat
+
+In MainActivity:
+```java
+// Remove new ChildEventListener(){}
+
+// Send button sends a message and clears the EditText
+mSendButton.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+        FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername, null);
+        mMessagesDatabaseReference.push().setValue(friendlyMessage);
+
+        // Clear input box
+        mMessageEditText.setText("");
+    }
+});
+mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+@Override
+public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+    FirebaseUser user = firebaseAuth.getCurrentUser();
+    if (user != null) {
+        // User is signed in
+        onSignedInInitialize(user.getDisplayName());
+    } else {
+        // User is signed out
+        onSignedOutCleanup();
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build()
+                );
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(providers)
+                        .build(),
+                RC_SIGN_IN);
+    }
+}
+};
+```
+```java
+@Override
+protected void onPause() {
+    super.onPause();
+    if (mAuthStateListener != null) {
+        mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+    }
+    mMessageAdapter.clear();
+    detachDatabaseReadListener();
+}
+
+private void onSignedInInitialize(String username) {
+    mUsername = username;
+    attachDatabaseReadListener();
+}
+
+private void onSignedOutCleanup() {
+    mUsername = ANONYMOUS;
+    mMessageAdapter.clear();
+    detachDatabaseReadListener();
+}
+
+private void attachDatabaseReadListener() {
+    if (mChildEventListener == null) {
+        mChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
+                mMessageAdapter.add(friendlyMessage);
+            }
+
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+            public void onChildRemoved(DataSnapshot dataSnapshot) {}
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
+            public void onCancelled(DatabaseError databaseError) {}
+        };
+        mMessagesDatabaseReference.addChildEventListener(mChildEventListener);
+    }
+}
+
+private void detachDatabaseReadListener() {
+    if (mChildEventListener != null) {
+        mMessagesDatabaseReference.removeEventListener(mChildEventListener);
+        mChildEventListener = null;
+    }
+}
+```
+
+On newer versions of FirebaseUI for Android - Auth, you may notice that the method `setProviders(String... providers)` is deprecated. The newer version of the API `setProviders(List<IdpConfig> idpConfigs``, taking in a List instead of a series of Strings. Check out the [documentation](https://github.com/firebase/FirebaseUI-Android/tree/master/auth#using-firebaseui-for-authentication) for the latest API usage instructions.
+
+### Handling Cancelled Sign In
+
+In MainActivity:
+
+```java
+@Override
+public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == RC_SIGN_IN) {
+        if (resultCode == RESULT_OK) {
+            // Sign-in succeeded, set up the UI
+            Toast.makeText(this, "Signed in!", Toast.LENGTH_SHORT).show();
+        } else if (resultCode == RESULT_CANCELED) {
+            // Sign in was canceled by the user, finish the activity
+            Toast.makeText(this, "Sign in canceled", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+}
+```
+
+### Auth in app - Signin Out
+
+```java
+@Override
+public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+        case R.id.sign_out_menu:
+            AuthUI.getInstance().signOut(this);
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+    }
+}
+```
+
+## Sunday
+
+### Firebase Storage Features
+
+### Creating Storage Structure
+
+In the tab list on the left side of the FriendlyChat app page of the Firebase Console, find Storage and select it.
+![](storage.png)
+When you look at your storage in the Firebase Console, you’ll see that nothing has been added yet.
+![](abcd.png)
+Let's take a look at the main features of this dashboard:
+
+- A. Button to upload file to storage directly from console
+- B. Add folders to organize data located in storage
+- C. Copy the current folder url
+- D. Address of your storage location.
+
+As you can see, currently there is nothing in storage.
+
+#### Create a Folder
+
+Before continuing forward, create a folder in Firebase Storage called chat_photos.
+
+### Storage Implementation Overview
+
+### Open Photo Picker
+
+Let’s get started with getting a photo picker appearing in our app. It should show up when we tap the photo picker button, so let’s update the code for the button’s click listener:
+
+```java
+// in onCreate method, ImagePickerButton shows an image picker to upload a image for a message
+mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View view) {
+    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+    intent.setType("image/jpeg");
+    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+    startActivityForResult(Intent.createChooser(intent, "Complete action using"), RC_PHOTO_PICKER);
+}
+});
+```
+
+We need an integer constant for `startActivityForResult` here, so we’ll also define an RC_PHOTO_PICKER constant on the top of the MainActivity class:
+```java
+private static final int RC_PHOTO_PICKER =  2;
+```
+
+With these four lines of code in the `onClick` method, a file picker will be opened to help us choose between any locally stored JPEG images that are on the device.
+
+With that set up, the app will now open an image picker where we can choose an image to send as a message. Make sure this is working before moving on! Selecting an image at this point won’t do anything in FriendlyChat for now though. In the next part, we’ll override the `onActivityResult` callback to send the image to Firebase Storage.
+
+### Add Image to Storage
+
+in build.gradle app:
+```
+implementation 'com.google.firebase:firebase-storage:16.0.1'
+```
+
+In MainActivity:
+```java
+private FirebaseStorage mFirebaseStorage;
+private StorageReference mChatPhotosStorageReference;
+```
+onCreate method:
+```java
+ mFirebaseStorage = FirebaseStorage.getInstance();
+
+ mChatPhotosStorageReference = mFirebaseStorage.getReference().child("chat_photos");
+```
+
+onActivityResult :
+```java
+@Override
+public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == RC_SIGN_IN) {
+        if (resultCode == RESULT_OK) {
+            // Sign-in succeeded, set up the UI
+            Toast.makeText(this, "Signed in!", Toast.LENGTH_SHORT).show();
+        } else if (resultCode == RESULT_CANCELED) {
+            // Sign in was canceled by the user, finish the activity
+            Toast.makeText(this, "Sign in canceled", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    } else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
+        Uri selectedImageUri = data.getData();
+
+        // Get a reference to store file at chat_photos/<FILENAME>
+        StorageReference photoRef = mChatPhotosStorageReference.child(selectedImageUri.getLastPathSegment());
+
+        // Upload file to Firebase Storage
+        photoRef.putFile(selectedImageUri)
+                .addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // When the image has successfully uploaded, we get its download URL
+                        @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
+
+                        // Set the download URL to the message box, so that the user can send it to the database
+                        FriendlyMessage friendlyMessage = new FriendlyMessage(null, mUsername, downloadUrl.toString());
+                        mMessagesDatabaseReference.push().setValue(friendlyMessage);
+                    }
+                });
+    }
+}
+```
+
+### Keep your Stuff Safe
 
