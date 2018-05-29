@@ -181,24 +181,24 @@ In the console, select Target > **Single Device**
 
 ## Notification vs Data Messages
 
-![](Lesson_4/fcmdiagramnotification.png)
+![](fcmdiagramnotification.png)
 
 Server key: 
-![](Lesson_4/overviewsettings.png)
+![](overviewsettings.png)
 
-![](Lesson_4/serverkey.png)
+![](serverkey.png)
 
-![](Lesson_4/notificationmessage.png)
-![](Lesson_4/datamessage.png)
-![](Lesson_4/notificationvsdata.png)
+![](notificationmessage.png)
+![](datamessage.png)
+![](notificationvsdata.png)
 
 ## Create Firebase Messaging Service
 
 [Squawker server](https://squawkerfcmserver.udacity.com/)
 
-![](Lesson_4/implementation.png)
-![](Lesson_4/onMessageReceived.png)
-![](Lesson_4/structuredata.png)
+![](implementation.png)
+![](onMessageReceived.png)
+![](structuredata.png)
 
 Create a service that extends FirebaseMessaginService
 
@@ -345,9 +345,9 @@ Add the service to the manifest with an intent filter that catches a com.google.
 
 With Data Messages, onMessageReceived is triggered when the app is in the foreground or the background.
 
-![](Lesson_4/datamessagexample.png)
-![](Lesson_4/notificationexample.png)
-![](Lesson_4/choosingnotificationvsdata.png)
+![](datamessagexample.png)
+![](notificationexample.png)
+![](choosingnotificationvsdata.png)
 
 ## Sending to Multiple Devices
 
@@ -357,11 +357,11 @@ Send to Groups:
 
 ### Topics
 
-![](Lesson_4/topics.png)
-![](Lesson_4/topicscodegeneric.png)
-![](Lesson_4/topicscode.png)
-![](Lesson_4/topicsexample.png)
-![](Lesson_4/topicsflow.png)
+![](topics.png)
+![](topicscodegeneric.png)
+![](topicscode.png)
+![](topicsexample.png)
+![](topicsflow.png)
 
 If you'd like to learn more about device groups, the documentation is [here](https://firebase.google.com/docs/cloud-messaging/android/device-group).
 
@@ -434,7 +434,7 @@ If you need to refresh your memory on how to set up preferences and listen to va
 
 To send an Instructor Squawk, you'll need to enter your server key and then you can pick an instructor from the list, as seen below. The following would, trigger the server to send a message from "Lyla", by sending a message from the "key_lyla" topic.
 
-![](Lesson_4/serversquawker.png)
+![](serversquawker.png)
 
 ## There's more to learn abour FCM
 
