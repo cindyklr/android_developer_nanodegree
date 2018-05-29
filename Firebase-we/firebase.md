@@ -75,14 +75,14 @@ Multi-user, collaborative and real-time.
 ### Database Structure
 
 All data is stored as JSON objects.
-![](Firebase-we/realtime.png)
-![](Firebase-we/realtime2.png)
-![](Firebase-we/offline.png)
-![](Firebase-we/cache.png)
-![](Firebase-we/structure.png)
-![](Firebase-we/pushid.png)
-![](Firebase-we/parentchild.png)
-![](Firebase-we/path.png)
+![](realtime.png)
+![](realtime2.png)
+![](offline.png)
+![](cache.png)
+![](structure.png)
+![](pushid.png)
+![](parentchild.png)
+![](path.png)
 
 If you'd like to learn more about JSON, check out the following resource:
 
@@ -174,10 +174,10 @@ If you'd like to see an example of objects in Firebase, the [read and write docu
 ### Database Security Rules
 
 Remember the database rules we changed? We made it so anyone can read and write data without checking authentication.
-![](Firebase-we/rulestrue.png)
+![](rulestrue.png)
 
 Let’s change it back to the default rules, which means that users need to be authenticated to read and write data. These rules are enforced by the Firebase servers. So there is no way for our users to bypass the rules that we set.
-![](Firebase-we/ruleauth.png)
+![](ruleauth.png)
 
 These rules are a good starting point for a simple chat app like FriendlyChat, but there are certainly plenty of cases where we will want to further restrict access. Let’s examine how Firebase Database security rules make this possible.
 
@@ -186,6 +186,7 @@ These rules are a good starting point for a simple chat app like FriendlyChat, b
 Firebase allows three main rule types: .read, .write. And .validate. Each of these can be set to “true” or “false” and can apply to the whole database or a particular location in the database depending on how they are configured.
 
 |Rule Type |	Description|
+|---|---|
 |.read |	Describes whether data can be read by the user.
 |.write |	Describes whether data can be written by the user.
 |.validate |	Defines what a correctly formatted value looks like, whether it has child nodes, and the data type.
@@ -195,6 +196,7 @@ Firebase allows three main rule types: .read, .write. And .validate. Each of the
 Firebase Database Security includes a set of predefined variables that enable you to customize data accessibility. Below is a list of predefined variables and a link to each API reference. 
 
 |Variable| 	Description|
+|---|---|
 |now |	The current time in milliseconds since Unix epoch time (January 1, 1970)|
 |root |	Corresponds to the current data at the root of the database. You can use this to read any data in your database in your rule expressions.|
 |newData |	Corresponds to the data that will result if the write is allowed|
@@ -215,6 +217,7 @@ The uid is a unique user ID. This ID is guaranteed to be unique across all provi
 The Firebase Auth ID is a web token. Yes, this means that there is a web token inside of the Auth web token! This token can contain the following data:
 
 |Data| 	Description|
+|---|---|
 |email |	The email address associated with the account.|
 |email_verified |	A boolean that is true if the user has verified they have access to the email address. Some providers automatically verify email addresses. You can customize authentication to include email verification for email/password on iOS.|
 |name |	The user’s display name, if one is set.|
@@ -626,15 +629,15 @@ public boolean onOptionsItemSelected(MenuItem item) {
 ## Sunday
 
 ### Firebase Storage Features
-![](Firebase-we/medias.png)
+![](medias.png)
 
-![](Firebase-we/storeimages.png)
+![](storeimages.png)
 
-![](Firebase-we/scalability.png)
+![](scalability.png)
 
-![](Firebase-we/rules.png)
+![](rules.png)
 
-![](Firebase-we/storeimplementation.png)
+![](storeimplementation.png)
 
 ### Creating Storage Structure
 
@@ -771,11 +774,11 @@ Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.Task
 ```
 **********************************
 ### Keep your Stuff Safe
-![](Firebase-we/secure.png)
+![](secure.png)
 
-![](Firebase-we/firebaseconsolerules.png)
+![](firebaseconsolerules.png)
 
-![](Firebase-we/defaultrule.png)
+![](defaultrule.png)
 
 ### Playing Matchmaker
 
@@ -803,7 +806,7 @@ Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.Task
 
 Context are part of the rules condition, allowing you to specify when to enforce rules, based on specific properties.
 Two main types of contexts : 
-![](Firebase-we/contexts.png)
+![](contexts.png)
 
 Here is an example rule that allows you to write to storage if the data is less than 3 MB.
 
@@ -822,13 +825,13 @@ service firebase.storage {
 Free and unlimited analytics tool that gives you insights on all aspects of your app.
 Collect analytics without setup.
 
-![](Firebase-we/analytics.png)
+![](analytics.png)
 
-![](Firebase-we/logevents.png)
+![](logevents.png)
 
 ### Analyze this
 
-![](Firebase-we/exampleanalytics.png)
+![](exampleanalytics.png)
 
 - [Automatically Collected User Properties in Firebase Analytics](https://support.google.com/firebase/answer/6317486?hl=en)
 - [Firebase Analytics Documentation](https://firebase.google.com/docs/analytics/)
@@ -846,7 +849,7 @@ implementation 'com.google.firebase:firebase-messaging:16.0.0'
 
 ### Remote Config
 
-![](Firebase-we/remoteconfig.png)
+![](remoteconfig.png)
 
 Add the dependency:
 ```
