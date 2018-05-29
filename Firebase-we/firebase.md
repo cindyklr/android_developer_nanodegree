@@ -608,6 +608,8 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
 ### Auth in app - Signin Out
 
+![](Firebase-we/signinout.png)
+
 ```java
 @Override
 public boolean onOptionsItemSelected(MenuItem item) {
@@ -624,6 +626,15 @@ public boolean onOptionsItemSelected(MenuItem item) {
 ## Sunday
 
 ### Firebase Storage Features
+![](Firebase-we/medias.png)
+
+![](Firebase-we/storeimages.png)
+
+![](Firebase-we/scalability.png)
+
+![](Firebase-we/rules.png)
+
+![](Firebase-we/storeimplementation.png)
 
 ### Creating Storage Structure
 
@@ -726,6 +737,194 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
     }
 }
 ```
+******************************
+If your image doesn't display correctly    
+Correction from Firebase :
+```java
+ Uri selectedImageUri = data.getData();
 
+// Get a reference to store file at chat_photos/<FILENAME>
+final StorageReference photoRef = mChatPhotosStorageReference.child(selectedImageUri.getLastPathSegment());
+UploadTask uploadTask = photoRef.putFile(selectedImageUri);
+Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+    @Override
+    public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+        if (!task.isSuccessful()) {
+            throw task.getException();
+        }
+
+        // Continue with the task to get the download URL
+        return photoRef.getDownloadUrl();
+    }
+}).addOnCompleteListener(new OnCompleteListener<Uri>() {
+    @Override
+    public void onComplete(@NonNull Task<Uri> task) {
+        if (task.isSuccessful()) {
+            Uri downloadUri = task.getResult();
+            FriendlyMessage friendlyMessage = new FriendlyMessage(null, mUsername, downloadUri.toString());
+            mMessagesDatabaseReference.push().setValue(friendlyMessage);
+        } else {
+            Log.d("Upload : ", "failed");
+        }
+    }
+});
+```
+**********************************
 ### Keep your Stuff Safe
+![](Firebase-we/secure.png)
+
+![](Firebase-we/firebaseconsolerules.png)
+
+![](Firebase-we/defaultrule.png)
+
+### Playing Matchmaker
+
+#### single segment
+/images/myimage.png
+
+#### wildcard segment
+/images/{imageId}
+
+#### multi-segments wildcard
+/images/{images=**} will match
+- /images/jarrod.jpg
+- /images/profilePics/lyla.jpg
+- images/profilePics/January/User1/Puf.jpg
+
+### Security Rules!
+
+- Storage Security rules have two rules types: allow read and allow write (and allow read, write), whereas Firebase Realtime Database has three rule types: .read, .write. and .validate
+- Firebase Storage Security rules are not cascading, so a value of true for a parent doesn't cause all children to be true. Firebase Realtime Database rules are cascading for .read and .write, so a value of true applies all children below the point where the node was declared true.
+
+### Contexts or Chaos
+
+- [Firebase Storage Security Documentation](https://firebase.google.com/docs/storage/security/)
+- [Firebase Storage Security Rules Reference](https://firebase.google.com/docs/reference/security/storage/)
+
+Context are part of the rules condition, allowing you to specify when to enforce rules, based on specific properties.
+Two main types of contexts : 
+![](Firebase-we/contexts.png)
+
+Here is an example rule that allows you to write to storage if the data is less than 3 MB.
+
+```
+service firebase.storage {
+  match /b/<firebase-bucket> /o {
+    match /{imageId} {
+        allow write: if request.resource.size < 3 * 1024 * 1024
+    }
+  }
+}
+```
+
+### Firebase Analytics 
+
+Free and unlimited analytics tool that gives you insights on all aspects of your app.
+Collect analytics without setup.
+
+![](Firebase-we/analytics.png)
+
+![](Firebase-we/logevents.png)
+
+### Analyze this
+
+![](Firebase-we/exampleanalytics.png)
+
+- [Automatically Collected User Properties in Firebase Analytics](https://support.google.com/firebase/answer/6317486?hl=en)
+- [Firebase Analytics Documentation](https://firebase.google.com/docs/analytics/)
+
+### Notify me
+
+Firebase Notifications is built on Firebase Cloud Messaging.
+
+### Notifications - Receiving a Message
+
+Add the dependency in build.gradle app:
+```
+implementation 'com.google.firebase:firebase-messaging:16.0.0'
+```
+
+### Remote Config
+
+![](Firebase-we/remoteconfig.png)
+
+Add the dependency:
+```
+implementation 'com.google.firebase:firebase-config:16.0.0'
+```
+
+In MainActivity:
+```java
+public static final String FRIENDLY_MSG_LENGTH_KEY = "friendly_msg_length";
+
+private FirebaseRemoteConfig mFirebaseRemoteConfig;
+```
+
+onCreate method:
+```java
+mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+// Create Remote Config Setting to enable developer mode.
+// Fetching configs from the server is normally limited to 5 requests per hour.
+// Enabling developer mode allows many more requests to be made per hour, so developers
+// can test different config values during development.
+FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+        .setDeveloperModeEnabled(BuildConfig.DEBUG)
+        .build();
+mFirebaseRemoteConfig.setConfigSettings(configSettings);
+
+// Define default config values. Defaults are used when fetched config values are not
+// available. Eg: if an error occurred fetching values from the server.
+Map<String, Object> defaultConfigMap = new HashMap<>();
+defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
+mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+fetchConfig();
+```
+```java
+// Fetch the config to determine the allowed length of messages.
+public void fetchConfig() {
+    long cacheExpiration = 3600; // 1 hour in seconds
+    // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
+    // server. This should not be used in release builds.
+    if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+        cacheExpiration = 0;
+    }
+    mFirebaseRemoteConfig.fetch(cacheExpiration)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    // Make the fetched config available
+                    // via FirebaseRemoteConfig get<type> calls, e.g., getLong, getString.
+                    mFirebaseRemoteConfig.activateFetched();
+
+                    // Update the EditText length limit with
+                    // the newly retrieved values from Remote Config.
+                    applyRetrievedLengthLimit();
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    // An error occurred when fetching the config.
+                    Log.w(TAG, "Error fetching config", e);
+
+                    // Update the EditText length limit with
+                    // the newly retrieved values from Remote Config.
+                    applyRetrievedLengthLimit();
+                }
+            });
+}
+
+/**
+    * Apply retrieved length limit to edit text field. This result may be fresh from the server or it may be from
+    * cached values.
+    */
+private void applyRetrievedLengthLimit() {
+    Long friendly_msg_length = mFirebaseRemoteConfig.getLong(FRIENDLY_MSG_LENGTH_KEY);
+    mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(friendly_msg_length.intValue())});
+    Log.d(TAG, FRIENDLY_MSG_LENGTH_KEY + " = " + friendly_msg_length);
+}
+```
+
+[Use Firebase Remote Config with Analytics](https://firebase.google.com/docs/remote-config/config-analytics)
 
