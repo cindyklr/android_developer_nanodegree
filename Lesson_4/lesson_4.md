@@ -179,6 +179,273 @@ In the console, select Target > **Single Device**
 
 ![](token.png "Token")
 
+## Notification vs Data Messages
+
+![](Lesson_4/fcmdiagramnotification.png)
+
+Server key: 
+![](Lesson_4/overviewsettings.png)
+
+![](Lesson_4/serverkey.png)
+
+![](Lesson_4/notificationmessage.png)
+![](Lesson_4/datamessage.png)
+![](Lesson_4/notificationvsdata.png)
+
+## Create Firebase Messaging Service
+
+[Squawker server](https://squawkerfcmserver.udacity.com/)
+
+![](Lesson_4/implementation.png)
+![](Lesson_4/onMessageReceived.png)
+![](Lesson_4/structuredata.png)
+
+Create a service that extends FirebaseMessaginService
+
+In the new service, override the method onMessageReceived, add the Squawk to the database and show a notification
+
+```java
+/**
+ * Listens for squawk FCM messages both in the background and the foreground and responds
+ * appropriately
+ * depending on type of message
+ */
+public class SquawkFirebaseMessageService extends FirebaseMessagingService {
+
+    private static final String JSON_KEY_AUTHOR = SquawkContract.COLUMN_AUTHOR;
+    private static final String JSON_KEY_AUTHOR_KEY = SquawkContract.COLUMN_AUTHOR_KEY;
+    private static final String JSON_KEY_MESSAGE = SquawkContract.COLUMN_MESSAGE;
+    private static final String JSON_KEY_DATE = SquawkContract.COLUMN_DATE;
+
+    private static final int NOTIFICATION_MAX_CHARACTERS = 30;
+    private static String LOG_TAG = SquawkFirebaseMessageService.class.getSimpleName();
+
+    /**
+     * Called when message is received.
+     *
+     * @param remoteMessage Object representing the message received from Firebase Cloud Messaging
+     */
+    @Override
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+        // There are two types of messages data messages and notification messages. Data messages
+        // are handled
+        // here in onMessageReceived whether the app is in the foreground or background. Data
+        // messages are the type
+        // traditionally used with FCM. Notification messages are only received here in
+        // onMessageReceived when the app
+        // is in the foreground. When the app is in the background an automatically generated
+        // notification is displayed.
+        // When the user taps on the notification they are returned to the app. Messages
+        // containing both notification
+        // and data payloads are treated as notification messages. The Firebase console always
+        // sends notification
+        // messages. For more see: https://firebase.google.com/docs/cloud-messaging/concept-options\
+
+        // The Squawk server always sends just *data* messages, meaning that onMessageReceived when
+        // the app is both in the foreground AND the background
+
+        Log.d(LOG_TAG, "From: " + remoteMessage.getFrom());
+
+        // Check if message contains a data payload.
+
+        Map<String, String> data = remoteMessage.getData();
+
+        if (data.size() > 0) {
+            Log.d(LOG_TAG, "Message data payload: " + data);
+
+            // Send a notification that you got a new message
+            sendNotification(data);
+            insertSquawk(data);
+
+        }
+    }
+
+    /**
+     * Inserts a single squawk into the database;
+     *
+     * @param data Map which has the message data in it
+     */
+    private void insertSquawk(final Map<String, String> data) {
+
+        // Database operations should not be done on the main thread
+        AsyncTask<Void, Void, Void> insertSquawkTask = new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ContentValues newMessage = new ContentValues();
+                newMessage.put(SquawkContract.COLUMN_AUTHOR, data.get(JSON_KEY_AUTHOR));
+                newMessage.put(SquawkContract.COLUMN_MESSAGE, data.get(JSON_KEY_MESSAGE).trim());
+                newMessage.put(SquawkContract.COLUMN_DATE, data.get(JSON_KEY_DATE));
+                newMessage.put(SquawkContract.COLUMN_AUTHOR_KEY, data.get(JSON_KEY_AUTHOR_KEY));
+                getContentResolver().insert(SquawkProvider.SquawkMessages.CONTENT_URI, newMessage);
+                return null;
+            }
+        };
+
+        insertSquawkTask.execute();
+    }
 
 
+    /**
+     * Create and show a simple notification containing the received FCM message
+     *
+     * @param data Map which has the message data in it
+     */
+    private void sendNotification(Map<String, String> data) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        // Create the pending intent to launch the activity
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                PendingIntent.FLAG_ONE_SHOT);
 
+        String author = data.get(JSON_KEY_AUTHOR);
+        String message = data.get(JSON_KEY_MESSAGE);
+
+        // If the message is longer than the max number of characters we want in our
+        // notification, truncate it and add the unicode character for ellipsis
+        if (message.length() > NOTIFICATION_MAX_CHARACTERS) {
+            message = message.substring(0, NOTIFICATION_MAX_CHARACTERS) + "\u2026";
+        }
+
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_duck)
+                .setContentTitle(String.format(getString(R.string.notification_message), author))
+                .setContentText(message)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+    }
+}
+```
+
+Add the service to the manifest with an intent filter that catches a com.google.firebase.MESSAGING_EVENT
+```xml
+ <!-- Id service -->
+<service android:name=".fcm.SquawkFirebaseInstanceIdService">
+    <intent-filter>
+        <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+    </intent-filter>
+</service>
+
+<!-- Service listening for any incoming messages -->
+<service android:name=".fcm.SquawkFirebaseMessageService">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>
+```
+
+## Foreground vs Background
+
+With Data Messages, onMessageReceived is triggered when the app is in the foreground or the background.
+
+![](Lesson_4/datamessagexample.png)
+![](Lesson_4/notificationexample.png)
+![](Lesson_4/choosingnotificationvsdata.png)
+
+## Sending to Multiple Devices
+
+Send to Groups:
+- device groups 
+- topics
+
+### Topics
+
+![](Lesson_4/topics.png)
+![](Lesson_4/topicscodegeneric.png)
+![](Lesson_4/topicscode.png)
+![](Lesson_4/topicsexample.png)
+![](Lesson_4/topicsflow.png)
+
+If you'd like to learn more about device groups, the documentation is [here](https://firebase.google.com/docs/cloud-messaging/android/device-group).
+
+### Sample Code
+
+The code for subscribing and unsubscribing to "country" topics is shown below.
+```java
+// Subscribing to topics
+FirebaseMessaging.getInstance().subscribeToTopic(“japan”);
+FirebaseMessaging.getInstance().subscribeToTopic(”usa”);
+
+// Unsubscribing from a topic
+FirebaseMessaging.getInstance().unsubscribeFromTopic(“usa”);
+```
+
+## Implement Topic Following
+
+In FollowingPreferenceFragment:
+- implements
+SharedPreferences.OnSharedPreferenceChangeListener
+```java
+/**
+* Triggered when shared preferences changes. This will be triggered when a person is followed
+* or un-followed
+*
+* @param sharedPreferences SharedPreferences file
+* @param key               The key of the preference which was changed
+*/
+@Override
+public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+Preference preference = findPreference(key);
+if (preference != null && preference instanceof SwitchPreferenceCompat) {
+    // Get the current state of the switch preference
+    boolean isOn = sharedPreferences.getBoolean(key, false);
+    if (isOn) {
+        // The preference key matches the following key for the associated instructor in
+        // FCM. For example, the key for Lyla is key_lyla (as seen in
+        // following_squawker.xml). The topic for Lyla's messages is /topics/key_lyla
+
+        // Subscribe
+        FirebaseMessaging.getInstance().subscribeToTopic(key);
+        Log.d(LOG_TAG, "Subscribing to " + key);
+    } else {
+        // Un-subscribe
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(key);
+        Log.d(LOG_TAG, "Un-subscribing to " + key);
+    }
+}
+}
+@Override
+public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    // Add the shared preference change listener
+    getPreferenceScreen().getSharedPreferences()
+            .registerOnSharedPreferenceChangeListener(this);
+}
+
+@Override
+public void onDestroy() {
+    super.onDestroy();
+    // Remove the shared preference change listener
+    getPreferenceScreen().getSharedPreferences()
+            .unregisterOnSharedPreferenceChangeListener(this);
+}
+```
+### Preferences lesson
+
+If you need to refresh your memory on how to set up preferences and listen to value changes check out this [lesson](https://classroom.udacity.com/courses/ud851/lessons/1392b674-18b6-4636-b36b-da7d37a319e3/concepts/328e74ec-6533-45f5-906f-3e3d6a09ea1d#) in the first Android course.
+
+To send an Instructor Squawk, you'll need to enter your server key and then you can pick an instructor from the list, as seen below. The following would, trigger the server to send a message from "Lyla", by sending a message from the "key_lyla" topic.
+
+![](Lesson_4/serversquawker.png)
+
+## There's more to learn abour FCM
+
+Where to Go for More
+
+FCM has documentation for both Android and setting up server code:
+
+- The Android documentation is [here](https://firebase.google.com/docs/cloud-messaging/android/client)
+- Documentation about how messages are sent from FCM to client is [here](https://firebase.google.com/docs/cloud-messaging/concept-options)
+- Detailed information about setting up an FCM server like my [Squawker server](https://squawkerfcmserver.udacity.com/) is here
+
+You can check out [this blog post](https://firebase.googleblog.com/2016/08/sending-notifications-between-android.html) for an example of some Node.js code for setting up an FCM server. The library that I used for the Squawker server is called [fcm-node](https://www.npmjs.com/package/fcm-node).
+
+Finally, as mentioned before, if you're interested in learning more about Android and Firebase, consider taking Udacity's [Firebase in a Weekend course](https://eu.udacity.com/course/firebase-in-a-weekend-by-google-android--ud0352) for Android. The class is free and walks you through the creation of a real time chat app with user accounts, photo sharing and more, using Firebase as a backend.
